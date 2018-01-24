@@ -8,7 +8,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.RecyclerView;
@@ -43,6 +46,8 @@ public class ArticleListActivity extends ActionBarActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ArticleListActivity.class.toString();
+    private static final String NO_NETWORK_TEXT = "No internet connection is available, please enable it for the best experience";
+
     private Toolbar mToolbar;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
@@ -59,11 +64,11 @@ public class ArticleListActivity extends ActionBarActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article_list);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-
         context = this;
 
-        final View toolbarContainerView = findViewById(R.id.toolbar_container);
+        if(!isConnectedToNetwork()){
+            showNetworkUnavailableSnackbar();
+        }
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
 
@@ -73,6 +78,20 @@ public class ArticleListActivity extends ActionBarActivity implements
         if (savedInstanceState == null) {
             refresh();
         }
+    }
+
+    // Detecting network connection. Code from: https://developer.android.com/training/basics/network-ops/managing.html
+    public boolean isConnectedToNetwork() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
+    }
+
+    public void showNetworkUnavailableSnackbar(){
+        Snackbar mySnackbar = Snackbar.make(findViewById(R.id.coordinatedLayout),
+                NO_NETWORK_TEXT, Snackbar.LENGTH_SHORT);
+        mySnackbar.show();
     }
 
     private void refresh() {
